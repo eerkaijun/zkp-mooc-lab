@@ -143,6 +143,7 @@ template LessThan(n) {
  * Outputs `out` = 1 if `in` is at most `b` bits long, and 0 otherwise.
  */
 template CheckBitLength(b) {
+    assert(b < 254);
     signal input in;
     signal output out;
 
@@ -191,9 +192,10 @@ template CheckWellFormedness(k, p) {
 }
 
 /*
- * Right-shifts `x` by `shift` bits to output `y`, where `shift` is a public circuit parameter.
+ * Right-shifts `b`-bit long `x` by `shift` bits to output `y`, where `shift` is a public circuit parameter.
  */
-template RightShift(shift) {
+template RightShift(b, shift) {
+    assert(shift < b);
     signal input x;
     signal output y;
 
@@ -226,7 +228,9 @@ template RoundAndCheck(k, p, P) {
     // Case I: no overflow
     // compute (m + 2^{round_amt-1}) >> round_amt
     var m_prime = m + (1 << (round_amt-1));
-    component right_shift = RightShift(round_amt);
+    //// Although m_prime is P+1 bits long in no overflow case, it can be P+2 bits long
+    //// in the overflow case and the constraints should not fail in either case
+    component right_shift = RightShift(P+2, round_amt);
     right_shift.x <== m_prime;
     var m_out_1 = right_shift.y;
     var e_out_1 = e;
