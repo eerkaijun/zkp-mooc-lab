@@ -265,6 +265,13 @@ template LeftShift(shift_bound) {
     signal output y;
 
     // TODO
+    if (skip_checks == 0) {
+        assert(shift < shift_bound);
+    }
+
+    signal intermediate;
+    intermediate <-- x << shift;
+    y <== intermediate;
 }
 
 /*
@@ -280,6 +287,11 @@ template MSNZB(b) {
     signal output one_hot[b];
 
     // TODO
+    if (skip_checks == 0) {
+        assert(in != 0);
+    }
+
+    
 }
 
 /*
