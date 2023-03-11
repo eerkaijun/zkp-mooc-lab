@@ -291,7 +291,20 @@ template MSNZB(b) {
         assert(in != 0);
     }
 
-    
+    signal temp[b];
+    component n2b = Num2Bits(b);
+    n2b.in <== in;
+    temp <== n2b.bits;
+
+    signal product[b];
+    product[b-1] <-- 1;
+    for (var i = b-2; i >= 0; i--) {
+        product[i] <-- product[i+1] * (1 - temp[i+1]);
+    }
+
+    for (var i = 0; i < b; i++) {
+        one_hot[i] <== product[i] * temp[i];
+    }
 }
 
 /*
