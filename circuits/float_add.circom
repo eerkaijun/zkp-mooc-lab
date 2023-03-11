@@ -147,6 +147,9 @@ template CheckBitLength(b) {
     signal output out;
 
     // TODO
+    signal intermediate;
+    intermediate <-- in >> b == 0 ? 1 : 0;
+    out <== intermediate;
 }
 
 /*
@@ -195,6 +198,9 @@ template RightShift(shift) {
     signal output y;
 
     // TODO
+    signal intermediate;
+    intermediate <-- x >> shift;
+    y <== intermediate;
 }
 
 /*
