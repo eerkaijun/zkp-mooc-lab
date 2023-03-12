@@ -323,6 +323,24 @@ template Normalize(k, p, P) {
     assert(P > p);
 
     // TODO
+    if (skip_checks == 0) {
+        assert(m != 0);
+    }
+
+    component msnzb = MSNZB(P+1);
+    msnzb.in <== m;
+    msnzb.skip_checks <== skip_checks;
+
+    var ell = 0;
+    var m_delta = 0;
+
+    for (var i = 0; i <= P; i++) {
+        ell += msnzb.one_hot[i]*i;
+        m_delta += msnzb.one_hot[i]*(1<<(P-i));
+    }
+
+    e_out <== e + ell - p;
+    m_out <== m_delta * m;
 }
 
 /*
