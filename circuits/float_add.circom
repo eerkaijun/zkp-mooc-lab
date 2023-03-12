@@ -357,4 +357,16 @@ template FloatAdd(k, p) {
     signal output m_out;
 
     // TODO
+    component cwf1 = CheckWellFormedness(k, p);
+    cwf1.e <== e[0];
+    cwf1.m <== m[0];
+
+    component cwf2 = CheckWellFormedness(k, p);
+    cwf2.e <== e[1];
+    cwf2.m <== m[1];
+
+    // Arrange numbers in the order of their magnitude
+    var mgn1 = (e[0] << (p+1)) + m[0];
+    var mgn2 = (e[1] << (p+1)) + m[1];
+
 }
