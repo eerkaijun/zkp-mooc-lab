@@ -356,6 +356,8 @@ template FloatAdd(k, p) {
     signal output e_out;
     signal output m_out;
 
+    var P = 2*p + 1;
+
     // TODO
     component cwf1 = CheckWellFormedness(k, p);
     cwf1.e <== e[0];
@@ -366,7 +368,65 @@ template FloatAdd(k, p) {
     cwf2.m <== m[1];
 
     // Arrange numbers in the order of their magnitude
-    var mgn1 = (e[0] << (p+1)) + m[0];
-    var mgn2 = (e[1] << (p+1)) + m[1];
+    var mgn1 = (e[0] * (1<<(p+1))) + m[0];
+    var mgn2 = (e[1] * (1<<(p+1))) + m[1];
 
+    component compare = LessThan(k+p+1);
+    compare.in[0] <== mgn1;
+    compare.in[1] <== mgn2;
+
+    component eSwitcher = Switcher(); 
+    component mSwitcher = Switcher();
+
+    eSwitcher.sel <== compare.out;
+    eSwitcher.L <== e[0];
+    eSwitcher.R <== e[1];
+
+    mSwitcher.sel <== compare.out;
+    mSwitcher.L <== m[0];
+    mSwitcher.R <== m[1];
+
+    var alpha_m = mSwitcher.outL;
+    var alpha_e = eSwitcher.outL;
+    var beta_m = mSwitcher.outR;
+    var beta_e = eSwitcher.outR;
+    var diff = alpha_e - beta_e;
+
+    component compareDiff = LessThan(k);
+    compareDiff.in[0] <== p+1;
+    compareDiff.in[1] <== diff;
+
+    component checkAlphaE = IsZero();
+    checkAlphaE.in <== alpha_e;
+
+    component or = OR();
+    or.a <== compareDiff.out;
+    or.b <== checkAlphaE.out;
+
+    component leftShift = LeftShift(252);
+    leftShift.x <== alpha_m * (1 - or.out);
+    leftShift.shift <== diff;
+    leftShift.skip_checks <== or.out;
+
+    component normalized = Normalize(k, p, P);
+    normalized.e <== beta_e;
+    normalized.m <== leftShift.y + beta_m;
+    normalized.skip_checks <== or.out;
+
+    component roundCheck = RoundAndCheck(k, p, P);
+    roundCheck.e <== normalized.e_out * (1 - or.out);
+    roundCheck.m <== normalized.m_out * (1 - or.out);
+
+    component eIf = IfThenElse();
+    eIf.cond <== or.out;
+    eIf.L <== alpha_e;
+    eIf.R <== roundCheck.e_out;
+
+    component mIf = IfThenElse();
+    mIf.cond <== or.out;
+    mIf.L <== alpha_m;
+    mIf.R <== roundCheck.m_out;
+
+    e_out <== eIf.out;
+    m_out <== mIf.out;
 }
